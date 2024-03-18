@@ -4,6 +4,13 @@ import os
 import datetime
 
 app = Flask(__name__)
+
+environment_type = os.getenv("PY_ENV", "prod")
+if environment_type == "dev":
+    os.environ["AWS_ENDPOINT_URL"] = "http://localhost:4566"  # LocalStack endpoint
+else:
+    pass
+
 dynamodb = boto3.client("dynamodb")
 
 
