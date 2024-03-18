@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block content %}
+  <h1>Leave Booking Calendar</h1>
+  <div class="input-container">
+    <label for="user_name">Your Name:</label>
+    <input type="text" id="user_name" name="user_name" required />
+  </div>
+  <!-- Display the calendar -->
+  <div id="calendar"></div>
+  <script src="{{ url_for('static', filename='index.global.min.js') }}"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const calendarEl = document.getElementById('calendar');
+      const calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        events: [
+          {% for leave_day in leave_days %}
+            {
+              id: '{{ leave_day.leave_id }}',
+              title: 'Leave - {{leave_day.name }}',
+              start: '{{ leave_day.from_date }}',
+              end: '{{ leave_day.to_date }}',
+              extendedProps: { user: '{{ leave_day.name }}' }
+            },
+          {% endfor %}
+        ],
+        initialDate: new Date(),
+        headerToolbar: {
+          left: 'prev,next',
+          center: 'title',
+          right: 'today'
+        },
+        selectable: true,
+        selectMirror: true,
+        select: function(arg) {
+          const name = document.querySelector('#user_name').value
+          if (name) {
+            calendar.addEvent({
+              title: `Leave - ${name}`,
+              start: arg.start,
+              end: arg.end,
+              extendedProps: { user: `${name}` }
+            })
+            fetch("/", {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+              },
+              body: new URLSearchParams({
+                from_date: arg.startStr,
+                to_date: arg.endStr,
+                user_name: name
+              }).toString()
+            })
+            .then(response => window.location.href = '/')
+            .catch(err => console.error(err))
+          }
+          calendar.unselect()
+        },
+        eventClick: function(arg) {
+          if (confirm(`Are you sure you want to delete the event ${arg.event.title}?`)) {
+            const { id } = arg.event
+
+            fetch("{{ url_for('delete_leave',leave_id=0) }}".replace('0', id), {method: 'DELETE'})
+              .then(response => window.location.href = '/')
+              .catch(err => console.error(err))
+          }
+        }
+      });
+      calendar.render();
+    })
+  </script>
+{% endblock content %}
