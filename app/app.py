@@ -4,8 +4,6 @@ import os
 import datetime
 
 app = Flask(__name__)
-
-os.environ["AWS_ENDPOINT_URL"] = "http://localhost:4566"
 dynamodb = boto3.client("dynamodb")
 
 
